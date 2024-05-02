@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}
+{%if name %}
+page
+{% endif %}
+{% endblock %}
+{% block a %}
+<strong id="stop-value"></strong>
+<strong id="NoPassengers"></strong>
+{% endblock %}
+{% block content %}
+    <div id="data-container">
+        <style>
+            table {
+                width: 100%; /* Set the width of the table to 100% */
+                border-collapse: collapse; /* Collapse the borders between cells */
+                /* Add any other styles you want to customize the table */
+            }
+
+            th, td {
+                border: 1px solid #ddd; /* Add a border to the table cells */
+                padding: 8px; /* Add padding to the table cells */
+                text-align: left; /* Align text to the left in cells */
+                /* Add any other styles you want to customize the table cells */
+            }
+
+            th {
+                background-color: #f2f2f2; /* Set a background color for table header cells */
+                /* Add any other styles you want to customize the header cells */
+            }
+        </style>
+        {{ tables[0]|safe }}
+    </div>
+    <script>
+        function updateTable() {
+            fetch('/get_table_data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('data-container').innerHTML = data.html_table;
+                })
+                .catch(error => console.error('Error updating table:', error));
+        }
+
+        updateTable();
+
+        setInterval(updateTable, 3000);
+    </script>
+    
+{% endblock %}
