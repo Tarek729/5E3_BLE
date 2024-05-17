@@ -5,8 +5,12 @@ page
 {% endif %}
 {% endblock %}
 {% block a %}
-<strong id="stop-value">Stop Number: 1</strong>
-<strong id="NoPassengers"></strong>
+    <div>
+        <strong id="stop-value"></strong>
+    </div>
+    <div>
+        <strong id="NoPassengers"></strong>
+    </div>
 {% endblock %}
 {% block content %}
     <div id="data-container">
@@ -45,7 +49,7 @@ page
             fetch('/Update_Stop_Number')
                 .then(response => response.json())
                 .then(data => {
-                    $('#stop-value').text("Stop Number: " + data.stop_param);
+                    $('#stop-value').text("Current stop: " + data.stop_param);
                 })
                 .catch(error => console.error('Error updating stop number:', error));
         }
@@ -58,7 +62,17 @@ page
                 })
                 .catch(error => console.error('Error updating passenger count:', error));
         }
-    
+        
+        function GetStopNumber() {
+            fetch('/Get_Stop_Number')
+                .then(response => response.json())
+                .then(data => {
+                    $('#stop-value').text("Current stop: " + data.stop_param);
+                })
+                .catch(error => console.error('Error updating passenger count:', error));
+        }
+
+        GetStopNumber();
         setInterval(UpdateStopNumber, 20000);
         setInterval(UpdatePassengerCount, 3000);
         setInterval(updateTable, 3000);

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> -->
+    <script src="{{ url_for('static', filename='jquery-3.7.1.min.js') }}"></script>
     <head>
         <meta charset="utf-8" />
         <title>{% block title %}{% endblock %}</title>
@@ -8,6 +9,8 @@
     </head>
     <body>
         <div class="navbar">
+            <style>
+            </style>
             <a>{% block a %}{% endblock %}</a>
         </div>
 
