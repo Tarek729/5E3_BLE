@@ -87,7 +87,7 @@ antennas_positions = [
     np.array([300, 0]) * metre_to_pxl,  # Green = 3
     np.array([0, 300]) * metre_to_pxl # Blue = 4   
 ]
-Table1 = pd.DataFrame({'UUID': [],'Ant1': [],'Ant2': [],'Ant3': [],'Ant4': []})
+Table1 = pd.DataFrame({'UUID': [],'Ant1': [],'Ant2': [],'Ant3': [],'Ant4': [],'From stop': []})
 
 IsCountDown = False
 stop_param = 1
@@ -124,13 +124,15 @@ async def POST_API():
         data = request.json
         devices = data['Devices']
         df = pd.DataFrame(devices)
+        print(df)
+        #Email_to_Send = pd.DataFrame({'UUID': []})
         if df.empty == False:
             for count, id in enumerate(df["UUID"].values):
                 if id not in Table1["UUID"].values:
                     UUIDval = df.iloc[count]["UUID"]
-                    #Send_Email(UUIDval,True)
-                    new_row = {'UUID' : UUIDval}
+                    new_row = {'UUID' : UUIDval,'From stop': Stop_map[stop_param]}
                     Table1 = pd.concat([Table1, pd.DataFrame([new_row])], ignore_index = True)
+                    Send_Email(UUIDval,True)
                 else:
                     if df.iloc[count]['Ant'] == 1:
                         Table1.loc[Table1["UUID"]==id, "Ant1"] = df.iloc[count]["rssi"]
@@ -142,15 +144,15 @@ async def POST_API():
                         Table1.loc[Table1["UUID"]==id, "Ant4"] = df.iloc[count]["rssi"]
             unique = Table1["UUID"][~Table1["UUID"].isin(df["UUID"])].drop_duplicates()
             for id in unique.values:
-                #Send_Email(id,False)
+                Send_Email(id,False)
                 Table1.drop(Table1.loc[Table1["UUID"]==id].index,inplace=True)
             html_table = Table1.to_html(classes='data', header='true')
             #print('\x1b[H\x1b[2J', end='')
             #print(Table1)
             return jsonify({'html_table': f'{css_styles}{html_table}'})
-        #if len(Table1) == 1:
-            #Send_Email(Table1["UUID"][0],False)
-        Table1 = pd.DataFrame({'UUID': [],'Ant1': [],'Ant2': [],'Ant3': [],'Ant4': []})
+        if len(Table1) == 1:
+            Send_Email(Table1["UUID"][0],False)
+        Table1 = pd.DataFrame({'UUID': [],'Ant1': [],'Ant2': [],'Ant3': [],'Ant4': [],'From stop': []})
         return "None"
     except Exception as e:
         print(f"[ERROR] An error occurred: {e}")
@@ -256,7 +258,7 @@ def send_email(subject, recipients, body):
 
 def convert_rssi_to_m(rssi):
     """ Convert RSSI value to meters. """
-    rssi_at_1m = -70  # RSSI value at 1 meter
+    rssi_at_1m = -55  # RSSI value at 1 meter
     N = 4  # Environmental factor
     return 10 ** ((rssi_at_1m - rssi) / (10.0 * N)) * 100
 
@@ -290,7 +292,7 @@ def Calculate_Position_Coordinates():
     # return jsonify(data)
     devices = Table1
     _, columns = devices.shape
-    if columns == 5:
+    if columns == 6:
         data = []
         for _, device in devices.iterrows():
             if not device.isna().any():
@@ -329,19 +331,18 @@ def Calculate_Position_Coordinates():
 def Is_onboard_bus():
     global Table1
     Is_onboard = False
+    From_stop = ''
     UUID = request.args.get('UUID', type=str, default="") 
-    if UUID == '00002a37-0000-1000-8000-00805f9b34fb':
-        return jsonify({'Is_Onboard': f'{True}'})
     if len(Table1) > 0:
         specific_string = UUID
         string_exists = (Table1['UUID'] == specific_string).any()
         if string_exists:
             Is_onboard = True
+            row_number = Table1.index.get_loc(Table1[Table1['UUID'] == UUID].index[0])
+            From_stop = Table1.iloc[row_number]["From stop"]
         else:
             Is_onboard = False
-        return jsonify({'Is_Onboard': f'{Is_onboard}'})
-    return jsonify({'Is_Onboard': f'{Is_onboard}'})
-
+    return jsonify({'Is_Onboard': f'{Is_onboard}', "From_stop": From_stop})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
