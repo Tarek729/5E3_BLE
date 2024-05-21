@@ -109,6 +109,16 @@ mail = Mail(app)
 
 #stop_param = request.args.get('stop', type=int, default=0)     
 
+
+@app.route('/Get_ant_positions', methods=['GET'])
+def Get_ant_positions():
+    AntData = []
+    for i in antennas_in_use:
+        AntData.append({"Device_name": 'A' + str(i), "Device_x": int(antennas_positions[i-1][0]), "Device_y": int(antennas_positions[i-1][1])})
+    return jsonify(AntData)
+
+
+
 @app.route('/Get_Email')
 def Get_Email():
     name = request.args.get("name", type=str, default="1")
@@ -132,7 +142,7 @@ async def POST_API():
                     UUIDval = df.iloc[count]["UUID"]
                     new_row = {'UUID' : UUIDval,'From stop': Stop_map[stop_param]}
                     Table1 = pd.concat([Table1, pd.DataFrame([new_row])], ignore_index = True)
-                    Send_Email(UUIDval,True)
+                    #Send_Email(UUIDval,True)
                 else:
                     if df.iloc[count]['Ant'] == 1:
                         Table1.loc[Table1["UUID"]==id, "Ant1"] = df.iloc[count]["rssi"]
@@ -144,14 +154,14 @@ async def POST_API():
                         Table1.loc[Table1["UUID"]==id, "Ant4"] = df.iloc[count]["rssi"]
             unique = Table1["UUID"][~Table1["UUID"].isin(df["UUID"])].drop_duplicates()
             for id in unique.values:
-                Send_Email(id,False)
+                #Send_Email(id,False)
                 Table1.drop(Table1.loc[Table1["UUID"]==id].index,inplace=True)
             html_table = Table1.to_html(classes='data', header='true')
             #print('\x1b[H\x1b[2J', end='')
             #print(Table1)
             return jsonify({'html_table': f'{css_styles}{html_table}'})
-        if len(Table1) == 1:
-            Send_Email(Table1["UUID"][0],False)
+        # if len(Table1) == 1:
+        #     Send_Email(Table1["UUID"][0],False)
         Table1 = pd.DataFrame({'UUID': [],'Ant1': [],'Ant2': [],'Ant3': [],'Ant4': [],'From stop': []})
         return "None"
     except Exception as e:
